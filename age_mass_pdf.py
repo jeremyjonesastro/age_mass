@@ -13,17 +13,15 @@ import scipy.stats as stats
 fontsize=15
 
 #Example isochrone file name: 300Myr_1800Myr_50Myr_step.chr
-hist_only=True
+hist_only=False
 
 def main():
-    #profiles = glob.glob('Star_Profiles/*.sp')
-    #profiles = [p for p in profiles if 'lao' not in p]
-    #for profile in profiles:
-    #print(profile)
-    #Read the star profile file
-    #star = read_star_profile(profile)
-    star = read_star_profile('Star_Profiles/tau_Boo.sp')
-    print(star.met)
+    profiles = glob.glob('Star_Profiles/*.sp')
+    for profile in profiles:
+        print(profile)
+        Read the star profile file
+        star = read_star_profile(profile)
+    print(star.evo)
     res_dir = 'Results/{}'.format(star.name)
     res_fn = 'Results/{}/{}.res'.format(star.name,star.name)
     
@@ -36,7 +34,7 @@ def main():
     run_mass_calc(star,res_fn,star.mass_range,star.mass_res,star.age_range,sig_limit,star.hist_mass_res)
         
 def run_age_calc(star,res_fn,mass_range,age_range,age_res,sig_limit,hist_age_res):
-    mt_files = sorted(glob.glob('MIST_FeH{}/*eep'.format(star.met)))  #All files for the given metallicity
+    mt_files = sorted(glob.glob('{}/*eep'.format(star.evo)))  #All files for the given metallicity
     
     hist_age_bins = define_hist_age_bins(age_range,hist_age_res)
     
@@ -122,26 +120,6 @@ def run_age_calc(star,res_fn,mass_range,age_range,age_res,sig_limit,hist_age_res
     
     age_details_file = res_fn+'.age'
     
-    '''
-    #Do individual masses
-    open(age_details_file,'w').write('Results for age by mass:\n')
-    #print('Results for age by mass:')
-    for m in in_sig_df.mass.unique():
-        this_df = in_sig_df[in_sig_df.mass == m]
-        #print('{} M_sun'.format(m))
-        open(age_details_file,'a').write('{} M_sun\n'.format(m))
-        plt.hist(this_df.age/1e6,weights=this_df.gauss,density=True,bins=hist_age_bins)
-        plt.xlabel('Age (Myr)')
-        plt.ylabel('Normalized probability')
-        plt.xlim(hist_age_bins[0],hist_age_bins[-1])
-        plt.savefig('Results/{}/{}_age_pdf_M{:.2f}.png'.format(star.name,star.name,m))
-        plt.close()
-        age_report = make_report(this_df,'age')
-        #print(age_report)
-        open(age_details_file,'a').write(age_report)
-        open(age_details_file,'a').write('----------------------------\n')
-    
-    '''
     #Do all masses
     open(res_fn,'w').write('Results for age for all masses:\n')
     print('Results for age for all masses:')
@@ -162,7 +140,7 @@ def run_age_calc(star,res_fn,mass_range,age_range,age_res,sig_limit,hist_age_res
     plt.close()
     
 def run_mass_calc(star,res_fn,mass_range,mass_res,age_range,sig_limit,hist_mass_res):
-    iso_files = sorted(glob.glob('MIST_FeH{}/*chr'.format(star.met)))  #All files for the given metallicity
+    iso_files = sorted(glob.glob('{}/*chr'.format(star.evo)))  #All files for the given metallicity
     
     hist_mass_bins = define_hist_mass_bins(mass_range,hist_mass_res)
 
@@ -267,7 +245,7 @@ def read_star_profile(spfn):
                 prof[line[0]] = line[1:3]
             
     #Make the object of star_profile class
-    star = star_profile(prof['name'],prof['met'],prof['rad'],prof['rad_err'],prof['teff'],prof['teff_err'],prof['lum'],prof['lum_err'],prof['mass_range'],prof['mass_res'],prof['hist_mass_res'],prof['age_range'],prof['age_res'],prof['hist_age_res'])
+    star = star_profile(prof['name'],prof['evo'],prof['rad'],prof['rad_err'],prof['teff'],prof['teff_err'],prof['lum'],prof['lum_err'],prof['mass_range'],prof['mass_res'],prof['hist_mass_res'],prof['age_range'],prof['age_res'],prof['hist_age_res'])
     return star
 
 def stringify_metallicity(met):
@@ -508,10 +486,10 @@ def clean_for_iso(l,t,m_s,m_i):
     return l,t,m_s,m_i
 
 class star_profile:
-    def __init__(self,name,met,r,rerr,t,terr,l,lerr,mass_range,mass_res,hist_mass_res,age_range,age_res,hist_age_res):
+    def __init__(self,name,evo,r,rerr,t,terr,l,lerr,mass_range,mass_res,hist_mass_res,age_range,age_res,hist_age_res):
         #R & L in solar units, T in K
         self.name = name
-        self.met = stringify_metallicity(float(met))
+        self.evo = evo
         self.r = float(r)
         self.rerr = float(rerr)
         self.t = float(t)
