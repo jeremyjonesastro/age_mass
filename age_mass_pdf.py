@@ -358,38 +358,36 @@ def build_iso_df(iso_files,mass_range,mass_res,age_range):
             m_i = iso.isos[i]['initial_mass']
             
             #plt.plot(t,l,'k-')
-            if a/1e6 >= age_range[0]:
-                if a/1e6 <= age_range[1]:
-                    plot_xs.append(t)
-                    plot_ys.append(l)
-                    plot_as.append(a/1e6)
-                    
-                    max_mass = mass_range[1]
-                    if max(m_i) < max_mass:
-                        max_mass = max(m_i)
-                    min_mass = mass_range[0]
-                    if min(m_i) > min_mass:
-                        min_mass = min(m_i)
-                    
-                    l,t,m_s,m_i = clean_for_iso(l,t,m_s,m_i) #in case there are any duplicate masses
-                    
-                    lint = make_interp_spline(m_i,l)
-                    tint = make_interp_spline(m_i,t)
-                    mint = make_interp_spline(m_i,m_s)
-                    masses = np.arange(min_mass,max_mass+mass_res,mass_res)
-                    
-                    iso_logt = [tint(m) for m in masses]
-                    iso_logl = [lint(m) for m in masses]
-                    iso_m_curr = [mint(m) for m in masses]
-                    
-                    data={'logt':iso_logt,'logl':iso_logl,'star_mass':iso_m_curr,'initial_mass':masses}
-                    this_df = pd.DataFrame(data=data)
-                    this_df['age'] = a
-                    if first_iso:
-                        iso_df = this_df
-                        first_iso = False
-                    else:
-                        iso_df = pd.concat([iso_df,this_df],ignore_index=True,axis=0)
+            plot_xs.append(t)
+            plot_ys.append(l)
+            plot_as.append(10**a/1e6)   #This assumes the version 2.5 MIST isochrones, which lable age as log(age). This presents age as linear Myr.
+            
+            max_mass = mass_range[1]
+            if max(m_i) < max_mass:
+                max_mass = max(m_i)
+            min_mass = mass_range[0]
+            if min(m_i) > min_mass:
+                min_mass = min(m_i)
+            
+            l,t,m_s,m_i = clean_for_iso(l,t,m_s,m_i) #in case there are any duplicate masses
+            
+            lint = make_interp_spline(m_i,l)
+            tint = make_interp_spline(m_i,t)
+            mint = make_interp_spline(m_i,m_s)
+            masses = np.arange(min_mass,max_mass+mass_res,mass_res)
+            
+            iso_logt = [tint(m) for m in masses]
+            iso_logl = [lint(m) for m in masses]
+            iso_m_curr = [mint(m) for m in masses]
+            
+            data={'logt':iso_logt,'logl':iso_logl,'star_mass':iso_m_curr,'initial_mass':masses}
+            this_df = pd.DataFrame(data=data)
+            this_df['age'] = a
+            if first_iso:
+                iso_df = this_df
+                first_iso = False
+            else:
+                iso_df = pd.concat([iso_df,this_df],ignore_index=True,axis=0)
                 
     #Plot the isochrones
     lc = multiline(plot_xs,plot_ys,plot_as,cmap='gist_rainbow')
